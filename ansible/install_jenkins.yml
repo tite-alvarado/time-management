@@ -1,0 +1,41 @@
+# Install jenking continous integration system
+---
+- name: "Install Jenkins CI"
+  hosts: all
+  user: ubuntu
+  become: true
+
+  tasks:
+#  - name: "install prerequisite to copy files"
+#    apt: name=libselinux-python state=latest
+
+  - name: "copy jenkins repo"
+    copy: src=../files/jenkins.list dest=/etc/apt/sources.list.d/
+
+  - name: "add jekins repo apt key"
+    shell: wget -q -O - https://pkg.jenkins.io/debian/jenkins.io.key | sudo apt-key add -
+
+  - name: install jenkins, CI and build dependencies
+    apt: 
+      name:
+        - jenkins
+        - openjdk-8-jdk
+        - git
+        - ansible
+      state: latest
+      update_cache: yes
+    ignore_errors: true
+
+  - name: "ensure jenkins starts at boot"
+    service: name=jenkins state=restarted enabled=yes
+
+  - name: "enable shell for jenkins user"
+    user:
+      name: jenkins
+      shell: /bin/bahs
+      generate_ssh_key: yes
+      ssh_key_type: rsa
+      ssh_key_bits: 4096
+      ssh_key_file: .ssh/id_rsa
+      # ssh_key_passphrase: "{{ssh_passphrase}}"
+      force: no

@@ -1,0 +1,75 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.41">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@1.9.1"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@1.9.1">
+      <jobProperties/>
+      <triggers/>
+      <parameters>
+        <string>BRANCH</string>
+      </parameters>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>BRANCH</name>
+          <description>code branch to build</description>
+          <defaultValue>master</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.93">
+    <script>#!groovy
+
+pipeline {
+  agent any
+  options {
+    // ansiColor(&apos;xterm&apos;)
+    timestamps()
+  }
+  environment {
+    ENV = &quot;&quot; // get from vault
+   }
+  parameters {
+    string(name: &apos;BRANCH&apos;, description: &apos;code branch to build&apos;, defaultValue: &apos;master&apos;)
+  }
+    stages {
+    stage(&apos;Initialaze pipeline parameters&apos;) {
+      steps {
+        checkout([$class: &apos;GitSCM&apos;,
+          branches: [[name: &quot;${BRANCH}&quot;]],
+          doGenerateSubmoduleConfigurations: false,
+          gitTool: &apos;Default&apos;,
+          submoduleCfg: [],
+          userRemoteConfigs: [
+            [
+              // credentialsId: &apos;github_ssh&apos;,
+              url: &apos;git@github.com:tite-alvarado/timeoff-management-application.git&apos;
+            ]
+          ]
+        ])
+        script {
+          if (params.BRANCH == &apos;&apos; || params.BRANCH == null) {
+            currentBuild.result = &apos;ABORTED&apos;
+            error(&apos;No branch to build&apos;)
+          } else {
+            currentBuild.displayName = &quot;${params.BRANCH}&quot;
+          }
+          sh &apos; npm install &apos;
+        }
+      }
+    }
+  }
+}</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>
