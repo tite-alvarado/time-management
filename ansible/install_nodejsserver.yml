@@ -18,8 +18,50 @@
       state: latest
       update_cache: yes
 
-  - name: upgrade npm, use nodejs 14 
+  - name: upgrade npm, use nodejs 14
     shell: npm install -g n && n 14 && npm install -g npm && hash -d npm
     become: true
     register: result
     failed_when: result.rc != 0 and result.rc != 2
+
+  - name: send and run npm application
+    block:
+      - name: install supervisord
+        apt: name=supervisor state=latest
+
+      - name: send app
+        synchronize:
+          src: "{{ app }}"
+          dest: /opt/
+
+      - name: extract app name
+        shell: echo "{{ app | basename }}" | awk -F'_' '{print $1}'
+        register: app_name
+
+      - name: stop running app
+        supervisorctl:
+          name: "{{ app_name.stdout }}"
+          state: stopped
+
+      - name: recreate app folder
+        shell: rm -rf /opt/{{ app_name.stdout }} && mkdir -p /opt/{{ app_name.stdout }}
+
+      - name: untar to folder
+        shell: tar xf /opt/{{app | basename }} --directory /opt/
+
+      - name: copy supervisor template
+        template: src=supervisord.j2 dest=/etc/supervisor/conf.d/{{ app_name.stdout }}.conf
+        vars:
+          nodeapp_name: "{{ app_name.stdout }}"
+
+      - name: reload supervisord
+        service:
+          name: supervisor
+          state: restarted
+          enabled: yes
+
+      - name: start nodeapp
+        supervisorctl:
+          name: "{{ app_name.stdout }}"
+          state: started
+    when: app is defined

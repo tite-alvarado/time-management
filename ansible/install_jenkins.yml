@@ -19,6 +19,7 @@
         - openjdk-8-jdk
         - git
         - ansible
+        - chromium-chromedriver
       state: latest
       update_cache: yes
     ignore_errors: true

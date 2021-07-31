@@ -11,6 +11,8 @@ pipeline {
    }
   parameters {
     string(name: 'BRANCH', description: 'code branch to build', defaultValue: 'master')
+    booleanParam(name: 'DEPLOY', description: 'do docker deployment', defaultValue: true)
+    string(name: 'PORT', description: 'Port to expose the application on', defaultValue: '3000')
   }
     stages {
     stage('Checkout') {
@@ -48,7 +50,8 @@ pipeline {
           } else {
             currentBuild.displayName = "${params.BRANCH}"
           }
-          sh ' mkdir -p target ; cd timeoff-management-application ; npm install ; # npm test '
+          sh ' mkdir -p target '
+          sh ' cd timeoff-management-application ; npm install ; # npm test '
           sh(script:" docker build -t tm:${params.BRANCH} . ", returnStdout: true)
         }
       }
@@ -60,8 +63,23 @@ pipeline {
           sh(script: "docker save tm:${params.BRANCH} | gzip > target/docker-timeoff-management-application_${params.BRANCH}_${env.BUILD_NUMBER}.tar.gz", returnStdout: true)
         }
         archiveArtifacts artifacts: 'target/*'
-        cleanWs()
       }
+    }
+    stage('Deployment') {
+      steps {
+        script {
+          if (params.DEPLOY) {
+            // sh(script: "ansible-playbook -l nodeapp -i dreamcompute.inv --key ~/.ssh/dreamcompute.pem ansible/install_docker.yml -e app=target/docker-timeoff-management-application_${params.BRANCH}_${env.BUILD_NUMBER}.tar.gz", returnStdout: true)
+            sh(script: "ansible-playbook -l nodeapp -i dreamcompute.inv --key ~/.ssh/dreamcompute.pem ansible/install_nodejsserver.yml -e app=target/timeoff-management-application_${params.BRANCH}_${env.BUILD_NUMBER}.tar.gz -e app_port=${params.PORT}", returnStdout: true)
+          }
+          
+        }
+      }
+    }
+  }
+  post {
+    always {
+      cleanWs()  
     }
   }
 }
