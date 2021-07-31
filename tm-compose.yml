@@ -1,0 +1,24 @@
+# swarm-compatible
+version: "3.8"
+services:
+  nodeapp:
+    build: docker
+    image: tm
+    container_name: tm
+    ports:
+      - 3000:3000
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - internal
+    healthcheck:
+      test: ["curl","localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+networks:
+  internal:

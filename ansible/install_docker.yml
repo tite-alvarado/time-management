@@ -25,10 +25,48 @@
         - lsb-release
 
   - name: "install docker"
-    apt: 
+    apt:
       name: docker-ce
       state: latest
       update_cache: yes
 
+  - name: "install docker compose"
+    shell: curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    become: true
+    when: compose is defined
+
   - name: "start and enable docker service"
     service: name=docker state=restarted enabled=yes
+
+  - name: send and run docker image
+    block:
+      - name: send container
+        synchronize:
+          src: "{{ app }}"
+          dest: /tmp/
+
+      - name: remove all TM images
+        shell: docker images | awk '/^tm +/ {print $3}' | xargs -I % docker rmi %
+
+      - name: load image
+        shell: docker load < /tmp/"{{app | basename}}"
+        register: load_log
+
+      - name: show docker load log
+        debug:
+          msg: "{{ load_log }}"
+
+      - name: determine new loaded image name
+        shell: echo "{{ load_log.stdout }}" | awk '{print $NF}'
+        register: docker_image
+
+      - name: show docker image name
+        debug:
+          msg: "{{ docker_image }}"
+
+      - name : remove previous TM container
+        shell: docker rm -f tm
+
+      - name : run new TM container
+        shell: docker run --name tm {{ docker_image.stdout }}
+    when: app is defined

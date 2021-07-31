@@ -47,11 +47,25 @@ pipeline {
           branches: [[name: &quot;${BRANCH}&quot;]],
           doGenerateSubmoduleConfigurations: false,
           gitTool: &apos;Default&apos;,
+          extensions: [[$class: &apos;RelativeTargetDirectory&apos;, relativeTargetDir: &apos;time-application&apos;]],
           submoduleCfg: [],
           userRemoteConfigs: [
             [
               // credentialsId: &apos;github_ssh&apos;,
               url: &apos;git@github.com:tite-alvarado/timeoff-management-application.git&apos;
+            ]
+          ]
+        ])
+        checkout([$class: &apos;GitSCM&apos;,
+          branches: [[name: &quot;${BRANCH}&quot;]],
+          doGenerateSubmoduleConfigurations: false,
+          gitTool: &apos;Default&apos;,
+          extensions: [[$class: &apos;RelativeTargetDirectory&apos;, relativeTargetDir: &apos;.&apos;]],
+          submoduleCfg: [],
+          userRemoteConfigs: [
+            [
+              // credentialsId: &apos;github_ssh&apos;,
+              url: &apos;git@github.com:tite-alvarado/time-management.git&apos;
             ]
           ]
         ])
@@ -62,7 +76,8 @@ pipeline {
           } else {
             currentBuild.displayName = &quot;${params.BRANCH}&quot;
           }
-          sh &apos; npm install &apos;
+          sh &apos; cd time-application ; npm install &apos;
+          sh &apos; docker build -t tm:${params.BRANCH} .&apos;
         }
       }
     }
