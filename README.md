@@ -9,17 +9,22 @@ terraform init ; plan ; apply
 
 ## Prepare NodeJS server
 ```
-$ ansible-playbook -i dreamcompute.inv time-management/ansible/install_nodejsserver.yml
+$ ansible-playbook -i inventory time-management/ansible/install_nodejsserver.yml
 ```
 ## Install docker, optionally deploy and run docker image from file
 ```
-$ ansible-playbook -i dreamcompute.inv time-management/ansible/install_docker.yml
-$ ansible-playbook -i dreamcompute.inv time-management/ansible/install_docker.yml -e app=docker-image.tar.gz
+$ ansible-playbook -i inventory time-management/ansible/install_docker.yml
+$ ansible-playbook -i inventory time-management/ansible/install_docker.yml -e app=docker-image.tar.gz
+```
+
+## Prepare NGINX Load Balancer
+```
+$ ansible-playbook -i inventory time-management/ansible/install_nginx.yml
 ```
 
 ## Prepare CI server (Jenkins)
 ```
-$ ansible-playbook --key ~/.ssh/dreamcompute.pem  -i dreamcompute.inv time-management/ansible/install_jenkins.yml
+$ ansible-playbook --key ~/.ssh/dreamcompute.pem  -i inventory time-management/ansible/install_jenkins.yml
 ```
 Generate keys for repository access and load to your repositories deployment keys section
 ```

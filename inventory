@@ -3,3 +3,6 @@ jenkins-master ansible_host=208.113.135.166 ansible_ssh_user=ubuntu
 
 [nodeapp]
 nodeapp1 ansible_host=208.113.135.166 ansible_ssh_user=ubuntu
+
+[lb]
+lb1 ansible_host=208.113.135.166 ansible_ssh_user=ubuntu

@@ -12,19 +12,19 @@
   - name: "add jekins repo apt key"
     shell: wget -q -O - https://pkg.jenkins.io/debian/jenkins.io.key | sudo apt-key add -
 
-  - name: install jenkins, CI and build dependencies
+  - name: install jenkins, CI, build and test dependencies (full desktop)
     apt: 
       name:
         - jenkins
         - openjdk-8-jdk
         - git
         - ansible
-        - chromium-chromedriver
+        - phantomjs
       state: latest
       update_cache: yes
     ignore_errors: true
 
-  - name: "enable shell for jenkins user"
+  - name: "enable shell for jenkins user, generate key for cloud control by ansible"
     user:
       name: jenkins
       groups: docker

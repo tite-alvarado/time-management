@@ -14,22 +14,9 @@ pipeline {
     booleanParam(name: 'DEPLOY', description: 'do docker deployment', defaultValue: true)
     string(name: 'PORT', description: 'Port to expose the application on', defaultValue: '3000')
   }
-    stages {
+  stages {
     stage('Checkout') {
       steps {
-        checkout([$class: 'GitSCM',
-          branches: [[name: "${BRANCH}"]],
-          doGenerateSubmoduleConfigurations: false,
-          gitTool: 'Default',
-          extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'timeoff-management-application']],
-          submoduleCfg: [],
-          userRemoteConfigs: [
-            [
-              // credentialsId: 'github_ssh',
-              url: 'git@github.com:tite-alvarado/timeoff-management-application.git'
-            ]
-          ]
-        ])
         checkout([$class: 'GitSCM',
           branches: [[name: "master"]],
           doGenerateSubmoduleConfigurations: false,
@@ -43,6 +30,19 @@ pipeline {
             ]
           ]
         ])
+        dir('timeoff-management-application') {
+          checkout([$class: 'GitSCM',
+            branches: [[name: "${BRANCH}"]],
+            doGenerateSubmoduleConfigurations: false,
+            gitTool: 'Default',
+            submoduleCfg: [],
+            userRemoteConfigs: [
+              [
+                url: 'git@github.com:tite-alvarado/timeoff-management-application.git'
+              ]
+            ]
+          ])
+        }
         script {
           if (params.BRANCH == '' || params.BRANCH == null) {
             currentBuild.result = 'ABORTED'
@@ -51,7 +51,7 @@ pipeline {
             currentBuild.displayName = "${params.BRANCH}"
           }
           sh ' mkdir -p target '
-          sh ' cd timeoff-management-application ; npm install ; # npm test '
+          sh ' cd timeoff-management-application ; npm install ; npm start & sleep 5 && npm run-script db-update && USE_CHROME=1 npm test '
           sh(script:" docker build -t tm:${params.BRANCH} . ", returnStdout: true)
         }
       }
@@ -69,17 +69,16 @@ pipeline {
       steps {
         script {
           if (params.DEPLOY) {
-            // sh(script: "ansible-playbook -l nodeapp -i dreamcompute.inv --key ~/.ssh/dreamcompute.pem ansible/install_docker.yml -e app=target/docker-timeoff-management-application_${params.BRANCH}_${env.BUILD_NUMBER}.tar.gz", returnStdout: true)
-            sh(script: "ansible-playbook -l nodeapp -i dreamcompute.inv --key ~/.ssh/dreamcompute.pem ansible/install_nodejsserver.yml -e app=target/timeoff-management-application_${params.BRANCH}_${env.BUILD_NUMBER}.tar.gz -e app_port=${params.PORT}", returnStdout: true)
+            sh(script: "ansible-playbook -l nodeapp -i dreamcompute.inv --key ~/.ssh/dreamcompute.pem ansible/install_nodejsserver.yml -e app=target/timeoff-management-application_${params.BRANCH}_${env.BUILD_NUMBER}.tar.gz -e app_port=${params.PORT}", returnStdout: true)  
+            // sh(script: "ansible-playbook -l nodeapp -i inventory --key ~/.ssh/dreamcompute.pem ansible/install_docker.yml -e app=target/docker-timeoff-management-application_${params.BRANCH}_${env.BUILD_NUMBER}.tar.gz", returnStdout: true)
           }
-          
         }
       }
     }
   }
   post {
     always {
-      cleanWs()  
+      cleanWs()
     }
   }
 }
