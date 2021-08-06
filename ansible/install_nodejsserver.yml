@@ -47,7 +47,7 @@
         shell: rm -rf /opt/{{ app_name.stdout }} && mkdir -p /opt/{{ app_name.stdout }}
 
       - name: untar to folder
-        shell: tar xf /opt/{{app | basename }} --directory /opt/
+        shell: tar xf /opt/{{app | basename }} --directory /opt/ && chown -R {{ appuser }}
 
       - name: copy supervisor template
         template: src=supervisor.j2 dest=/etc/supervisor/conf.d/{{ app_name.stdout }}.conf

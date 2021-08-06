@@ -6,7 +6,7 @@ resource "openstack_compute_instance_v2" "time-management" {
   key_pair = "dreamcompute"
   flavor_name = "gp1.supersonic"
   # flavor_name = "gp1.lightspeed"
-  security_groups = ["default", "jenkins", "nodeapp", "http", "https"]
+  security_groups = ["default", "jenkins", "nodeapp", "nodeappprod", "http", "https"]
   metadata = {
     comment = "CI Server"
   }

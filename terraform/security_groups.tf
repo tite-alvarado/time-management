@@ -21,6 +21,17 @@ resource "openstack_compute_secgroup_v2" "nodeapp" {
   }
 }
 
+resource "openstack_compute_secgroup_v2" "nodeappprod" {
+  name = "nodeappprod"
+  description = "Security group for the nodeapp"
+  rule {
+    from_port = 3030
+    to_port = 3030
+    ip_protocol = "tcp"
+    cidr = "0.0.0.0/0"
+  }
+}
+
 resource "openstack_compute_secgroup_v2" "http" {
   name = "http"
   description = "Security group for http protocol"
