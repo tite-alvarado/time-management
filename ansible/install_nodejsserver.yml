@@ -23,6 +23,7 @@
     become: true
     register: result
     failed_when: result.rc != 0 and result.rc != 2
+    creates: /usr/local/bin/n
 
   - name: send and run npm application
     block:
@@ -47,7 +48,7 @@
         shell: rm -rf /opt/{{ app_name.stdout }} && mkdir -p /opt/{{ app_name.stdout }}
 
       - name: untar to folder
-        shell: tar xf /opt/{{app | basename }} --directory /opt/ && chown -R {{ appuser }}
+        shell: tar xf /opt/{{app | basename }} --directory /opt/ && chown -R  -R {{appuser}}.{{appuser}} /opt/{{app_name.stdout}}
 
       - name: copy supervisor template
         template: src=supervisor.j2 dest=/etc/supervisor/conf.d/{{ app_name.stdout }}.conf
